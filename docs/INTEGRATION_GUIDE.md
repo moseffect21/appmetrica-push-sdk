@@ -14,21 +14,24 @@ yarn add @moseffect21/appmetrica-push-sdk@git+https://github.com/moseffect21/app
 
 ### 2. Настройка зависимостей
 
-#### Android (android/app/build.gradle)
+#### Android
+
+**Зависимости AppMetrica Push SDK устанавливаются автоматически через библиотеку.**
+
+Убедитесь, что в основном проекте есть Firebase зависимости:
 
 ```gradle
 dependencies {
-    // Firebase Cloud Messaging
+    // Firebase Cloud Messaging (требуется для основного проекта)
     implementation platform('com.google.firebase:firebase-bom:33.2.0')
     implementation 'com.google.firebase:firebase-messaging'
-
-    // AppMetrica Push SDK
-    implementation("io.appmetrica.analytics:push:4.2.1")
-    implementation("io.appmetrica.analytics:push-provider-firebase:4.2.1")
+    implementation 'com.google.firebase:firebase-messaging-ktx'
 }
 ```
 
 #### iOS
+
+Зависимости `AppMetricaPush` и `AppMetricaPushLazy` устанавливаются автоматически через Podspec библиотеки.
 
 ```bash
 cd ios && pod install
@@ -86,6 +89,48 @@ const userData = await AppMetricaPush.getUserData(notification);
 - **Android**: Инициализация происходит через React Native модуль при вызове `AppMetricaPush.initialize()`
 
 ## 🔧 Дополнительные настройки
+
+### Настройка AndroidManifest.xml (Android)
+
+Библиотека включает компоненты для обработки push уведомлений. Добавьте следующие регистрации в `android/app/src/main/AndroidManifest.xml`:
+
+```xml
+<application>
+    <!-- Silent Push Receiver для AppMetrica Push SDK -->
+    <receiver android:name="com.appmetricapush.SilentPushReceiver"
+              android:exported="false">
+        <intent-filter>
+            <action android:name="com.appmetricapush.action.ymp.SILENT_PUSH_RECEIVE"/>
+        </intent-filter>
+    </receiver>
+
+    <!-- Firebase Messaging Service для интеграции с AppMetrica Push SDK -->
+    <service android:name="com.appmetricapush.FirebaseMessagingMainService"
+             android:enabled="true"
+             android:exported="false">
+        <intent-filter android:priority="100">
+            <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+        </intent-filter>
+    </service>
+
+    <!-- Отключаем стандартный AppMetrica Messaging Service -->
+    <service android:name="io.appmetrica.analytics.push.provider.firebase.AppMetricaMessagingService"
+             android:enabled="false"
+             tools:node="remove"/>
+
+    <!-- Иконка уведомлений по умолчанию для AppMetrica Push SDK -->
+    <meta-data android:name="io.appmetrica.analytics.push.default_notification_icon"
+               android:resource="@drawable/ic_stat_notification"/>
+</application>
+```
+
+### Silent Push уведомления
+
+Библиотека автоматически обрабатывает silent push уведомления от AppMetrica:
+
+- ✅ **SilentPushReceiver** - автоматически получает и обрабатывает silent push
+- ✅ **Логирование** - все silent push события логируются
+- ✅ **Интеграция с AppMetrica** - полная совместимость с AppMetrica Push SDK
 
 ### Настройка Firebase (Android)
 

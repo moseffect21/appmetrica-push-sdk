@@ -39,6 +39,38 @@ func application(_ application: UIApplication, didRegisterForRemoteNotifications
 
 #### Android
 
+**1. Настройка AndroidManifest.xml:**
+
+Добавьте в `android/app/src/main/AndroidManifest.xml`:
+
+```xml
+<application>
+    <!-- Silent Push Receiver для AppMetrica Push SDK -->
+    <receiver android:name="com.appmetricapush.SilentPushReceiver"
+              android:exported="false">
+        <intent-filter>
+            <action android:name="com.appmetricapush.action.ymp.SILENT_PUSH_RECEIVE"/>
+        </intent-filter>
+    </receiver>
+
+    <!-- Firebase Messaging Service для интеграции с AppMetrica Push SDK -->
+    <service android:name="com.appmetricapush.FirebaseMessagingMainService"
+             android:enabled="true"
+             android:exported="false">
+        <intent-filter android:priority="100">
+            <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+        </intent-filter>
+    </service>
+
+    <!-- Отключаем стандартный AppMetrica Messaging Service -->
+    <service android:name="io.appmetrica.analytics.push.provider.firebase.AppMetricaMessagingService"
+             android:enabled="false"
+             tools:node="remove"/>
+</application>
+```
+
+**2. Инициализация:**
+
 Инициализация происходит автоматически через React Native модуль.
 
 ### 2. Использование в React Native
@@ -107,9 +139,11 @@ cd ios && pod install
 ## ✨ Особенности
 
 - ✅ **Автоматическая инициализация** - нативная инициализация для iOS, JS для Android
+- ✅ **Silent Push поддержка** - автоматическая обработка silent push уведомлений
 - ✅ **TypeScript поддержка** - полная типизация
 - ✅ **Кросс-платформенность** - единый API для iOS и Android
 - ✅ **Простая интеграция** - минимум настройки
+- ✅ **Готовые компоненты** - SilentPushReceiver и FirebaseMessagingMainService
 
 ## 📋 Требования
 
