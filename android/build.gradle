@@ -1,0 +1,44 @@
+apply plugin: "com.android.library"
+apply plugin: "kotlin-android"
+
+android {
+    namespace "com.appmetricapush"
+    compileSdkVersion 34
+    buildToolsVersion "34.0.0"
+
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion 34
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    implementation "com.facebook.react:react-native:+"
+    
+    // Kotlin
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:2.1.20"
+    
+    // AppMetrica Push SDK (только основные зависимости)
+    implementation("io.appmetrica.analytics:push:4.2.1")
+    implementation("androidx.legacy:legacy-support-v4:1.0.0")
+    
+    // Firebase dependencies (будут переопределены основным проектом)
+    implementation platform('com.google.firebase:firebase-bom:33.2.0')
+    implementation 'com.google.firebase:firebase-messaging'
+    implementation 'com.google.firebase:firebase-messaging-ktx'
+    implementation("io.appmetrica.analytics:push-provider-firebase:4.2.1")
+}
