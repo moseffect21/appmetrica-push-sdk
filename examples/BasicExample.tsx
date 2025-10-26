@@ -3,12 +3,12 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Alert,
   StyleSheet,
   ScrollView,
   Platform,
 } from "react-native";
 import { getAPNSToken, getMessaging } from "@react-native-firebase/messaging";
+import { AppMetrica } from "@appmetrica/react-native-analytics";
 import { AppMetricaPush } from "../src";
 
 /**
@@ -46,7 +46,14 @@ export const BasicExample: React.FC = () => {
     try {
       addLog("Initializing AppMetrica Push SDK...");
 
-      // Получение APNS токена для iOS
+      // 1. Сначала активируем основную AppMetrica
+      addLog("Activating main AppMetrica...");
+      AppMetrica.activate({
+        apiKey: "YOUR_APPMETRICA_API_KEY", // Замените на ваш API ключ
+      });
+      addLog("✅ AppMetrica activated");
+
+      // 2. Получение APNS токена для iOS
       let apnsToken = "";
       if (Platform.OS === "ios") {
         addLog("Getting APNS token for iOS...");
@@ -55,13 +62,14 @@ export const BasicExample: React.FC = () => {
         addLog(`APNS token: ${apnsToken ? "✅ Received" : "❌ Failed to get"}`);
       }
 
+      // 3. Инициализация Push SDK (ТОЛЬКО после AppMetrica.activate)
       const result = await AppMetricaPush.initialize({
         debugMode: __DEV__,
         apnsToken: Platform.OS === "ios" ? apnsToken : undefined,
       });
 
       if (result.success) {
-        addLog("✅ SDK initialized successfully");
+        addLog("✅ Push SDK initialized successfully");
         setIsInitialized(true);
         await checkSDKStatus();
       } else {

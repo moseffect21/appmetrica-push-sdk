@@ -2,35 +2,29 @@
 
 React Native библиотека для интеграции с Yandex AppMetrica Push SDK.
 
-## 📚 Документация
-
-- [Интеграционный гайд](./docs/INTEGRATION_GUIDE.md) - подробное руководство по интеграции
-- [Настройка APNS токена для iOS](./docs/IOS_APNS_SETUP.md) - обязательная настройка для iOS
-- [Руководство для аналитиков](./docs/ANALYTICS_GUIDE.md) - настройка push кампаний
-
-## 🚀 Установка
+## Установка
 
 ```bash
-# Через npm
-npm install @moseffect21/appmetrica-push-sdk@git+https://github.com/moseffect21/appmetrica-push-sdk.git
-
-# Через yarn
-yarn add @moseffect21/appmetrica-push-sdk@git+https://github.com/moseffect21/appmetrica-push-sdk.git
+npm install @moseffect21/appmetrica-push-sdk
+# или
+yarn add @moseffect21/appmetrica-push-sdk
 ```
 
-## ⚡ Быстрый старт
+## Зависимости
 
-### 1. Настройка нативного кода
+```bash
+npm install @react-native-firebase/messaging
+npm install @appmetrica/react-native-analytics
+```
 
-#### Android
+## Настройка
 
-**1. Настройка AndroidManifest.xml:**
+### Android
 
 Добавьте в `android/app/src/main/AndroidManifest.xml`:
 
 ```xml
 <application>
-    <!-- Silent Push Receiver для AppMetrica Push SDK -->
     <receiver android:name="com.appmetricapush.SilentPushReceiver"
               android:exported="false">
         <intent-filter>
@@ -38,7 +32,6 @@ yarn add @moseffect21/appmetrica-push-sdk@git+https://github.com/moseffect21/app
         </intent-filter>
     </receiver>
 
-    <!-- Firebase Messaging Service для интеграции с AppMetrica Push SDK -->
     <service android:name="com.appmetricapush.FirebaseMessagingMainService"
              android:enabled="true"
              android:exported="false">
@@ -47,32 +40,39 @@ yarn add @moseffect21/appmetrica-push-sdk@git+https://github.com/moseffect21/app
         </intent-filter>
     </service>
 
-    <!-- Отключаем стандартный AppMetrica Messaging Service -->
     <service android:name="io.appmetrica.analytics.push.provider.firebase.AppMetricaMessagingService"
              android:enabled="false"
              tools:node="remove"/>
 </application>
 ```
 
-**2. Инициализация:**
+### iOS
 
-Инициализация происходит автоматически через React Native модуль.
+```bash
+cd ios && pod install
+```
 
-### 2. Использование в React Native
+## Использование
 
 ```typescript
 import { Platform } from "react-native";
 import { getAPNSToken, getMessaging } from "@react-native-firebase/messaging";
+import { AppMetrica } from "@appmetrica/react-native-analytics";
 import { AppMetricaPush } from "@moseffect21/appmetrica-push-sdk";
 
-// Получение APNS токена для iOS
+// 1. Сначала активируем основную AppMetrica
+AppMetrica.activate({
+  apiKey: "YOUR_APPMETRICA_API_KEY",
+});
+
+// 2. Получение APNS токена для iOS
 let apnsToken = "";
 if (Platform.OS === "ios") {
   const messaging = getMessaging();
   apnsToken = (await getAPNSToken(messaging)) ?? "";
 }
 
-// Инициализация с APNS токеном для iOS
+// 3. Инициализация Push SDK (ТОЛЬКО после AppMetrica.activate)
 await AppMetricaPush.initialize({
   debugMode: __DEV__,
   apnsToken: Platform.OS === "ios" ? apnsToken : undefined,
@@ -83,111 +83,23 @@ const isFromAppMetrica = await AppMetricaPush.isNotificationFromAppMetrica(
   notification
 );
 
-// Получение информации о SDK
-const sdkInfo = await AppMetricaPush.getSDKInfo();
-
-// Извлечение пользовательских данных
+// Получение пользовательских данных
 const userData = await AppMetricaPush.getUserData(notification);
 ```
 
-## 📱 API
-
-### Основные методы
+## API
 
 - `initialize(config)` - инициализация SDK
 - `isNotificationFromAppMetrica(notification)` - проверка источника уведомления
-- `getSDKInfo()` - получение информации о SDK
 - `getUserData(notification)` - извлечение пользовательских данных
+- `getSDKInfo()` - информация о SDK
 
-### Утилиты
-
-- `initializeAppMetricaPush(config)` - инициализация с проверками
-- `isSDKInitialized()` - проверка инициализации
-- `getCurrentConfig()` - текущая конфигурация
-
-### React Hook
-
-- `useAppMetricaPush()` - хук для работы с SDK
-
-## 🔧 Зависимости
-
-### React Native
-
-```bash
-npm install @react-native-firebase/messaging
-```
-
-### Android (android/app/build.gradle)
-
-```gradle
-dependencies {
-    // Firebase Cloud Messaging
-    implementation platform('com.google.firebase:firebase-bom:33.2.0')
-    implementation 'com.google.firebase:firebase-messaging'
-
-    // AppMetrica Push SDK
-    implementation("io.appmetrica.analytics:push:4.2.1")
-    implementation("io.appmetrica.analytics:push-provider-firebase:4.2.1")
-}
-```
-
-### iOS
-
-```bash
-cd ios && pod install
-```
-
-## ✨ Особенности
-
-- ✅ **Автоматическая инициализация** - нативная инициализация для iOS, JS для Android
-- ✅ **Silent Push поддержка** - автоматическая обработка silent push уведомлений
-- ✅ **TypeScript поддержка** - полная типизация
-- ✅ **Кросс-платформенность** - единый API для iOS и Android
-- ✅ **Простая интеграция** - минимум настройки
-- ✅ **Готовые компоненты** - SilentPushReceiver и FirebaseMessagingMainService
-
-## 📋 Требования
+## Требования
 
 - React Native >= 0.60.0
 - Android API 21+
 - iOS 11.0+
 
-## 🐛 Troubleshooting
-
-### Частые проблемы
-
-1. **"AppMetricaPushModule is not available"**
-
-   - Проверьте установку библиотеки
-   - Выполните `cd ios && pod install` (iOS)
-   - Пересоберите проект
-
-2. **Push-уведомления не приходят**
-   - Проверьте настройки Firebase/APNs
-   - Убедитесь в правильной инициализации
-
-## 🚀 Публикация
-
-Для публикации пакета используйте готовые скрипты:
-
-```bash
-# Patch версия (1.0.0 -> 1.0.1)
-npm run publish:patch
-
-# Minor версия (1.0.0 -> 1.1.0)
-npm run publish:minor
-
-# Major версия (1.0.0 -> 2.0.0)
-npm run publish:major
-```
-
-Подробное руководство: [PUBLISH_GUIDE.md](./PUBLISH_GUIDE.md)
-
-## 📄 Лицензия
+## Лицензия
 
 MIT
-
-## 🔗 Ссылки
-
-- [AppMetrica Push SDK](https://appmetrica.yandex.ru/docs/mobile-sdk-dg/push-sdk/about.html)
-- [GitHub](https://github.com/moseffect21/appmetrica-push-sdk)

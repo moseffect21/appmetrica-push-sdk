@@ -1,137 +1,122 @@
-# AppMetrica Push SDK - Интеграция
+# Полное руководство по интеграции AppMetrica Push SDK
 
-## 🚀 Быстрая установка
+## Содержание
+
+1. [Обзор](#обзор)
+2. [Установка](#установка)
+3. [Настройка зависимостей](#настройка-зависимостей)
+4. [Настройка нативного кода](#настройка-нативного-кода)
+5. [Использование в React Native](#использование-в-react-native)
+6. [API Reference](#api-reference)
+7. [Примеры использования](#примеры-использования)
+8. [Troubleshooting](#troubleshooting)
+
+## Обзор
+
+`@moseffect21/appmetrica-push-sdk` - это React Native библиотека для интеграции с Yandex AppMetrica Push SDK. Библиотека предоставляет единый API для работы с push-уведомлениями на iOS и Android.
+
+### Основные возможности
+
+- ✅ **Кросс-платформенность** - единый API для iOS и Android
+- ✅ **TypeScript поддержка** - полная типизация
+- ✅ **Автоматическая обработка** - silent push уведомления
+- ✅ **Простая интеграция** - минимум настройки
+- ✅ **Firebase интеграция** - поддержка APNS токенов через Firebase
+
+## Установка
 
 ### 1. Установка библиотеки
 
 ```bash
 # Через npm
-npm install @moseffect21/appmetrica-push-sdk@git+https://github.com/moseffect21/appmetrica-push-sdk.git
+npm install @moseffect21/appmetrica-push-sdk
 
 # Через yarn
-yarn add @moseffect21/appmetrica-push-sdk@git+https://github.com/moseffect21/appmetrica-push-sdk.git
+yarn add @moseffect21/appmetrica-push-sdk
+
+# Через pnpm
+pnpm add @moseffect21/appmetrica-push-sdk
 ```
 
-### 2. Настройка зависимостей
+### 2. Установка зависимостей
 
-#### React Native
+#### React Native Firebase
 
 ```bash
 npm install @react-native-firebase/messaging
 ```
 
-#### Android
+#### AppMetrica (обязательно)
 
-**Зависимости AppMetrica Push SDK устанавливаются автоматически через библиотеку.**
-
-Убедитесь, что в основном проекте есть Firebase зависимости:
-
-```gradle
-dependencies {
-    // Firebase Cloud Messaging (требуется для основного проекта)
-    implementation platform('com.google.firebase:firebase-bom:33.2.0')
-    implementation 'com.google.firebase:firebase-messaging'
-    implementation 'com.google.firebase:firebase-messaging-ktx'
-}
+```bash
+npm install @appmetrica/react-native-analytics
 ```
 
 #### iOS
-
-Зависимости `AppMetricaPush` и `AppMetricaPushLazy` устанавливаются автоматически через Podspec библиотеки.
 
 ```bash
 cd ios && pod install
 ```
 
-## 📱 Настройка нативного кода
-
-### iOS (AppDelegate.swift)
-
-```swift
-// AppDelegate.swift - минимальная настройка
-func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
-    // AppMetrica Push SDK инициализируется через TypeScript
-    // после инициализации основной AppMetrica
-
-    return true
-}
-```
+## Настройка зависимостей
 
 ### Android
 
-**Инициализация происходит автоматически через React Native модуль при вызове `AppMetricaPush.initialize()` в JavaScript коде.**
+#### 1. Firebase Cloud Messaging
 
-## 💻 Использование в React Native
+Добавьте в `android/app/build.gradle`:
 
-```typescript
-import { Platform } from "react-native";
-import { getAPNSToken, getMessaging } from "@react-native-firebase/messaging";
-import {
-  AppMetricaPush,
-  registerDeviceToken,
-} from "@moseffect21/appmetrica-push-sdk";
-
-// Получение APNS токена для iOS
-let apnsToken = "";
-if (Platform.OS === "ios") {
-  const messaging = getMessaging();
-  apnsToken = (await getAPNSToken(messaging)) ?? "";
+```gradle
+dependencies {
+    // Firebase Cloud Messaging
+    implementation platform('com.google.firebase:firebase-bom:33.2.0')
+    implementation 'com.google.firebase:firebase-messaging'
+    implementation 'com.google.firebase:firebase-messaging-ktx'
 }
 
-// Инициализация с автоматической регистрацией APNs токена для iOS
-await AppMetricaPush.initialize({
-  debugMode: __DEV__,
-  apnsToken: Platform.OS === "ios" ? apnsToken : undefined, // Только для iOS
-  appGroup: undefined, // Только для iOS
-});
-
-// Дополнительная регистрация device token (если нужна)
-const deviceToken = await getDeviceToken(); // Ваш метод получения токена
-await registerDeviceToken(deviceToken);
-
-// Проверка уведомления
-const isFromAppMetrica = await AppMetricaPush.isNotificationFromAppMetrica(
-  notification
-);
-
-// Получение информации о SDK
-const sdkInfo = await AppMetricaPush.getSDKInfo();
-
-// Извлечение пользовательских данных
-const userData = await AppMetricaPush.getUserData(notification);
+// В конце файла
+apply plugin: 'com.google.gms.google-services'
 ```
 
-### Различия между платформами
+#### 2. Google Services
 
-- **iOS**: Инициализация происходит через React Native модуль при вызове `AppMetricaPush.initialize()`
-- **Android**: Инициализация происходит через React Native модуль при вызове `AppMetricaPush.initialize()`
-- **Обе платформы**: Device token передается через TypeScript метод `registerDeviceToken()`
+Добавьте в `android/build.gradle`:
 
-### Параметры конфигурации
-
-- **`debugMode`**: Включает отладочные сообщения (по умолчанию `false`)
-- **`apnsToken`**: APNs device token для автоматической регистрации на iOS (обязательно для iOS)
-- **`appGroup`**: App Group для расширений iOS (опционально)
-
-### ⚠️ Важно для iOS
-
-Для iOS **обязательно** нужно передавать APNS токен, полученный через Firebase:
-
-```typescript
-import { getAPNSToken, getMessaging } from "@react-native-firebase/messaging";
-
-let apnsToken = "";
-if (Platform.OS === "ios") {
-  const messaging = getMessaging();
-  apnsToken = (await getAPNSToken(messaging)) ?? "";
+```gradle
+buildscript {
+    dependencies {
+        classpath 'com.google.gms:google-services:4.4.0'
+    }
 }
 ```
 
-## 🔧 Дополнительные настройки
+#### 3. Google Services JSON
 
-### Настройка AndroidManifest.xml (Android)
+Скачайте `google-services.json` из Firebase Console и поместите в `android/app/`
 
-Библиотека включает компоненты для обработки push уведомлений. Добавьте следующие регистрации в `android/app/src/main/AndroidManifest.xml`:
+### iOS
+
+#### 1. Firebase Configuration
+
+Скачайте `GoogleService-Info.plist` из Firebase Console и добавьте в Xcode проект
+
+#### 2. Push Notifications
+
+Включите Push Notifications в Xcode:
+
+1. Откройте проект в Xcode
+2. Выберите ваш target
+3. Перейдите в "Signing & Capabilities"
+4. Нажмите "+ Capability"
+5. Добавьте "Push Notifications"
+
+## Настройка нативного кода
+
+### Android
+
+#### 1. AndroidManifest.xml
+
+Добавьте в `android/app/src/main/AndroidManifest.xml`:
 
 ```xml
 <application>
@@ -163,64 +148,505 @@ if (Platform.OS === "ios") {
 </application>
 ```
 
-### Silent Push уведомления
+#### 2. Иконка уведомлений
 
-Библиотека автоматически обрабатывает silent push уведомления от AppMetrica:
+Создайте иконку `ic_stat_notification.png` в `android/app/src/main/res/drawable/`
 
-- ✅ **SilentPushReceiver** - автоматически получает и обрабатывает silent push
-- ✅ **Логирование** - все silent push события логируются
-- ✅ **Интеграция с AppMetrica** - полная совместимость с AppMetrica Push SDK
+### iOS
 
-### Настройка Firebase (Android)
+#### 1. AppDelegate.swift
 
-1. Добавьте `google-services.json` в `android/app/`
-2. Включите Firebase в `android/app/build.gradle`:
+Минимальная настройка (инициализация происходит через React Native):
 
-```gradle
-apply plugin: 'com.google.gms.google-services'
+```swift
+import UIKit
+import Firebase
+
+@main
+class AppDelegate: UIResponder, UIApplicationDelegate {
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
+        // Firebase инициализация
+        FirebaseApp.configure()
+
+        // AppMetrica Push SDK инициализируется через React Native
+        return true
+    }
+}
 ```
 
-### Настройка APNs (iOS)
+#### 2. Info.plist
 
-1. Включите Push Notifications в Xcode
-2. Настройте сертификаты в Apple Developer Console
+Добавьте разрешения для push уведомлений:
 
-## 📚 API Reference
+```xml
+<key>UIBackgroundModes</key>
+<array>
+    <string>remote-notification</string>
+</array>
+```
+
+## Использование в React Native
+
+### ⚠️ Важно: Порядок инициализации
+
+**AppMetrica Push SDK должен инициализироваться ТОЛЬКО после активации основной AppMetrica!**
+
+```typescript
+import { AppMetrica } from "@appmetrica/react-native-analytics";
+
+// 1. Сначала активируем основную AppMetrica
+AppMetrica.activate({
+  apiKey: "YOUR_APPMETRICA_API_KEY",
+});
+
+// 2. ТОЛЬКО ПОСЛЕ этого инициализируем Push SDK
+await AppMetricaPush.initialize({
+  debugMode: __DEV__,
+  apnsToken: Platform.OS === "ios" ? apnsToken : undefined,
+});
+```
+
+### 1. Базовый пример
+
+```typescript
+import { Platform } from "react-native";
+import { getAPNSToken, getMessaging } from "@react-native-firebase/messaging";
+import { AppMetrica } from "@appmetrica/react-native-analytics";
+import { AppMetricaPush } from "@moseffect21/appmetrica-push-sdk";
+
+const initializeAppMetricaWithPush = async () => {
+  try {
+    // 1. Активация основной AppMetrica
+    AppMetrica.activate({
+      apiKey: "YOUR_APPMETRICA_API_KEY",
+    });
+
+    console.log("AppMetrica activated");
+
+    // 2. Получение APNS токена для iOS
+    let apnsToken = "";
+    if (Platform.OS === "ios") {
+      const messaging = getMessaging();
+      apnsToken = (await getAPNSToken(messaging)) ?? "";
+
+      if (!apnsToken) {
+        console.error("Failed to get APNS token for iOS");
+        return;
+      }
+    }
+
+    // 3. Инициализация AppMetrica Push SDK (ТОЛЬКО после AppMetrica.activate)
+    const result = await AppMetricaPush.initialize({
+      debugMode: __DEV__,
+      apnsToken: Platform.OS === "ios" ? apnsToken : undefined,
+    });
+
+    if (result.success) {
+      console.log("AppMetrica Push SDK initialized successfully");
+    } else {
+      console.error("Failed to initialize AppMetrica Push SDK:", result.error);
+    }
+  } catch (error) {
+    console.error("Error initializing AppMetrica Push SDK:", error);
+  }
+};
+```
+
+### 2. Обработка push уведомлений
+
+```typescript
+import messaging from "@react-native-firebase/messaging";
+import { AppMetricaPush } from "@moseffect21/appmetrica-push-sdk";
+
+// Обработка уведомлений в foreground
+const unsubscribe = messaging().onMessage(async (remoteMessage) => {
+  console.log("A new FCM message arrived!", remoteMessage);
+
+  // Проверяем, что уведомление от AppMetrica
+  const isFromAppMetrica = await AppMetricaPush.isNotificationFromAppMetrica(
+    remoteMessage
+  );
+
+  if (isFromAppMetrica) {
+    // Получаем пользовательские данные
+    const userData = await AppMetricaPush.getUserData(remoteMessage);
+    console.log("AppMetrica user data:", userData);
+
+    // Показываем уведомление
+    // ... ваш код для отображения уведомления
+  }
+});
+
+// Обработка уведомлений при открытии приложения
+messaging().onNotificationOpenedApp((remoteMessage) => {
+  console.log(
+    "Notification caused app to open from background state:",
+    remoteMessage
+  );
+
+  // Проверяем, что уведомление от AppMetrica
+  AppMetricaPush.isNotificationFromAppMetrica(remoteMessage).then(
+    (isFromAppMetrica) => {
+      if (isFromAppMetrica) {
+        // Обрабатываем открытие уведомления
+        // ... ваш код навигации
+      }
+    }
+  );
+});
+```
+
+### 3. Использование React Hook
+
+```typescript
+import React from "react";
+import { View, Text } from "react-native";
+import { useAppMetricaPush } from "@moseffect21/appmetrica-push-sdk";
+
+const MyComponent = () => {
+  const { sdkInfo, isInitialized, isLoading } = useAppMetricaPush();
+
+  if (isLoading) {
+    return <Text>Loading...</Text>;
+  }
+
+  return (
+    <View>
+      <Text>SDK initialized: {isInitialized ? "Yes" : "No"}</Text>
+      {sdkInfo && <Text>Version: {sdkInfo.version}</Text>}
+    </View>
+  );
+};
+```
+
+## API Reference
 
 ### Основные методы
 
-- `initialize(config)` - Инициализация SDK
-- `isNotificationFromAppMetrica(notification)` - Проверка уведомления
-- `getSDKInfo()` - Информация о SDK
-- `getUserData(notification)` - Пользовательские данные
+#### `initialize(config: PushConfig): Promise<InitializationResult>`
+
+Инициализация AppMetrica Push SDK.
+
+**Параметры:**
+
+- `config.debugMode?: boolean` - режим отладки
+- `config.apnsToken?: string` - APNS токен для iOS (обязательно)
+- `config.appGroup?: string` - App Group для iOS расширений
+
+**Возвращает:**
+
+```typescript
+{
+  success: boolean;
+  error?: string;
+}
+```
+
+#### `isNotificationFromAppMetrica(notification: any): Promise<boolean>`
+
+Проверяет, что уведомление отправлено через AppMetrica.
+
+**Параметры:**
+
+- `notification` - объект уведомления
+
+**Возвращает:** `boolean`
+
+#### `getUserData(notification: any): Promise<any>`
+
+Извлекает пользовательские данные из уведомления AppMetrica.
+
+**Параметры:**
+
+- `notification` - объект уведомления
+
+**Возвращает:** объект с пользовательскими данными
+
+#### `getSDKInfo(): Promise<SDKInfo | null>`
+
+Получает информацию о SDK.
+
+**Возвращает:**
+
+```typescript
+{
+  version: string;
+  platform: string;
+  sdkName?: string;
+  libraryVersion?: string;
+}
+```
 
 ### Утилиты
 
-- `initializeAppMetricaPush(config)` - Инициализация с проверками
-- `isSDKInitialized()` - Проверка инициализации
-- `getCurrentConfig()` - Текущая конфигурация
+#### `initializeAppMetricaPush(config: PushConfig, forceReinit?: boolean): Promise<boolean>`
 
-## 🐛 Troubleshooting
+Инициализация с дополнительными проверками.
+
+#### `isSDKInitialized(): boolean`
+
+Проверяет, инициализирован ли SDK.
+
+#### `getCurrentConfig(): PushConfig | null`
+
+Получает текущую конфигурацию.
+
+#### `registerDeviceToken(deviceToken: string): Promise<boolean>`
+
+Регистрирует device token.
+
+### React Hook
+
+#### `useAppMetricaPush(): UseAppMetricaPushReturn`
+
+Хук для работы с SDK в React компонентах.
+
+**Возвращает:**
+
+```typescript
+{
+  sdkInfo: SDKInfo | null;
+  isInitialized: boolean;
+  isLoading: boolean;
+  refreshSDKInfo: () => Promise<void>;
+}
+```
+
+## Примеры использования
+
+### 1. Полная инициализация
+
+```typescript
+import { useEffect } from "react";
+import { Platform } from "react-native";
+import { getAPNSToken, getMessaging } from "@react-native-firebase/messaging";
+import { AppMetrica } from "@appmetrica/react-native-analytics";
+import { AppMetricaPush } from "@moseffect21/appmetrica-push-sdk";
+
+export const useAppMetricaPushInit = () => {
+  useEffect(() => {
+    const init = async () => {
+      try {
+        // 1. Активация основной AppMetrica (ОБЯЗАТЕЛЬНО ПЕРВЫМ!)
+        AppMetrica.activate({
+          apiKey: "YOUR_APPMETRICA_API_KEY",
+        });
+
+        console.log("AppMetrica activated");
+
+        // 2. Получение разрешений на push уведомления
+        const authStatus = await messaging().requestPermission();
+        const enabled =
+          authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+          authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+
+        if (!enabled) {
+          console.log("Push notifications not authorized");
+          return;
+        }
+
+        // 3. Получение APNS токена для iOS
+        let apnsToken = "";
+        if (Platform.OS === "ios") {
+          const messagingInstance = getMessaging();
+          apnsToken = (await getAPNSToken(messagingInstance)) ?? "";
+        }
+
+        // 4. Инициализация AppMetrica Push SDK (ТОЛЬКО после AppMetrica.activate)
+        const result = await AppMetricaPush.initialize({
+          debugMode: __DEV__,
+          apnsToken: Platform.OS === "ios" ? apnsToken : undefined,
+        });
+
+        if (result.success) {
+          console.log("AppMetrica Push SDK initialized");
+        }
+      } catch (error) {
+        console.error("Failed to initialize AppMetrica Push SDK:", error);
+      }
+    };
+
+    init();
+  }, []);
+};
+```
+
+### 2. Обработка уведомлений с навигацией
+
+```typescript
+import { AppMetricaPush } from "@moseffect21/appmetrica-push-sdk";
+import { NavigationContainerRef } from "@react-navigation/native";
+
+const handleNotificationPress = async (notification: any) => {
+  const isFromAppMetrica = await AppMetricaPush.isNotificationFromAppMetrica(
+    notification
+  );
+
+  if (isFromAppMetrica) {
+    const userData = await AppMetricaPush.getUserData(notification);
+
+    // Навигация на основе данных уведомления
+    if (userData?.screen) {
+      navigationRef.current?.navigate(userData.screen, userData.params);
+    }
+  }
+};
+```
+
+### 3. Отслеживание событий
+
+```typescript
+import { AppMetricaPush } from "@moseffect21/appmetrica-push-sdk";
+
+const trackPushEvent = async (notification: any, action: string) => {
+  const isFromAppMetrica = await AppMetricaPush.isNotificationFromAppMetrica(
+    notification
+  );
+
+  if (isFromAppMetrica) {
+    const userData = await AppMetricaPush.getUserData(notification);
+
+    // Отправка события в аналитику
+    analytics.track("push_notification_action", {
+      action,
+      campaign_id: userData?.campaign_id,
+      message_id: userData?.message_id,
+    });
+  }
+};
+```
+
+## Troubleshooting
 
 ### Частые проблемы
 
-1. **"AppMetricaPushModule is not available"**
+#### 1. "AppMetricaPushModule is not available"
 
-   - Проверьте, что библиотека правильно установлена
-   - Выполните `cd ios && pod install` (iOS)
-   - Пересоберите проект
+**Причины:**
 
-2. **Push-уведомления не приходят**
+- Библиотека не установлена
+- Не выполнена линковка (iOS)
+- Не пересобран проект
 
-   - Проверьте настройки Firebase/APNs
-   - Убедитесь, что device token регистрируется
-   - Проверьте логи в консоли
+**Решение:**
 
-3. **Ошибки компиляции**
-   - Очистите кэш: `npx react-native start --reset-cache`
-   - Пересоберите проект полностью
+```bash
+# Переустановка
+npm uninstall @moseffect21/appmetrica-push-sdk
+npm install @moseffect21/appmetrica-push-sdk
 
-## 📞 Поддержка
+# iOS
+cd ios && pod install
 
-- GitHub: [moseffect21/appmetrica-push-sdk](https://github.com/moseffect21/appmetrica-push-sdk)
-- Документация: [AppMetrica Push SDK](https://appmetrica.yandex.ru/docs/mobile-sdk-dg/push-sdk/about.html)
+# Пересборка
+npx react-native run-ios
+npx react-native run-android
+```
+
+#### 2. Push-уведомления не приходят
+
+**Проверьте:**
+
+1. **Порядок инициализации:**
+
+   ```typescript
+   // ❌ НЕПРАВИЛЬНО - Push SDK инициализируется до AppMetrica
+   await AppMetricaPush.initialize(config);
+   AppMetrica.activate({ apiKey: "YOUR_KEY" });
+
+   // ✅ ПРАВИЛЬНО - сначала AppMetrica, потом Push SDK
+   AppMetrica.activate({ apiKey: "YOUR_KEY" });
+   await AppMetricaPush.initialize(config);
+   ```
+
+2. **Firebase настройки:**
+
+   - `google-services.json` в `android/app/`
+   - `GoogleService-Info.plist` в iOS проекте
+
+3. **Разрешения:**
+
+   ```typescript
+   const authStatus = await messaging().requestPermission();
+   console.log("Authorization status:", authStatus);
+   ```
+
+4. **APNS токен (iOS):**
+
+   ```typescript
+   const apnsToken = await getAPNSToken(getMessaging());
+   console.log("APNS token:", apnsToken);
+   ```
+
+5. **Логи:**
+
+   ```bash
+   # Android
+   npx react-native log-android
+
+   # iOS
+   npx react-native log-ios
+   ```
+
+#### 3. Ошибки компиляции
+
+**Решение:**
+
+```bash
+# Очистка кэша
+npx react-native start --reset-cache
+
+# Очистка build
+cd android && ./gradlew clean
+cd ios && xcodebuild clean
+
+# Пересборка
+npx react-native run-android
+npx react-native run-ios
+```
+
+#### 4. Silent Push не работает
+
+**Проверьте AndroidManifest.xml:**
+
+```xml
+<receiver android:name="com.appmetricapush.SilentPushReceiver"
+          android:exported="false">
+    <intent-filter>
+        <action android:name="com.appmetricapush.action.ymp.SILENT_PUSH_RECEIVE"/>
+    </intent-filter>
+</receiver>
+```
+
+#### 5. Уведомления без звука
+
+**Для Android:** Убедитесь, что в AppMetrica указан канал `appmetrica_push_channel`
+
+**Для iOS:** Проверьте настройки APNS сертификатов
+
+### Отладка
+
+#### Включение debug режима
+
+```typescript
+await AppMetricaPush.initialize({
+  debugMode: true, // Включает подробные логи
+  apnsToken: apnsToken,
+});
+```
+
+#### Проверка статуса SDK
+
+```typescript
+const isInitialized = AppMetricaPush.isSDKInitialized();
+const config = AppMetricaPush.getConfig();
+const sdkInfo = await AppMetricaPush.getSDKInfo();
+
+console.log("SDK Status:", { isInitialized, config, sdkInfo });
+```
+
+### Поддержка
+
+- **GitHub Issues:** [moseffect21/appmetrica-push-sdk](https://github.com/moseffect21/appmetrica-push-sdk/issues)
+- **AppMetrica Docs:** [Push SDK Documentation](https://appmetrica.yandex.ru/docs/mobile-sdk-dg/push-sdk/about.html)
+- **Firebase Docs:** [React Native Firebase](https://rnfirebase.io/)
