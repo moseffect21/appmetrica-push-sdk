@@ -16,17 +16,17 @@
 
 ```bash
 # Установка зависимостей
-npm install
+yarn install
 
 # Проверка линтера
-npm run lint
+yarn lint
 ```
 
 ### 3. Тестирование
 
 ```bash
 # Запуск тестов
-npm test
+yarn test
 ```
 
 ## Публикация в npm
@@ -155,7 +155,7 @@ npm version major
 
 ```bash
 # Проверка и публикация
-npm run lint
+yarn lint
 npm publish --access public
 
 # Создание git тега и отправка в GitHub

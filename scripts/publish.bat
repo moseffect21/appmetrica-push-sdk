@@ -29,7 +29,7 @@ echo [SUCCESS] Авторизован как: %NPM_USER%
 
 REM Установка зависимостей
 echo [INFO] 📦 Установка зависимостей...
-npm install
+yarn install
 if errorlevel 1 (
     echo [ERROR] Ошибка при установке зависимостей
     exit /b 1
@@ -37,7 +37,7 @@ if errorlevel 1 (
 
 REM Проверка линтера
 echo [INFO] 🔍 Проверка кода линтером...
-npm run lint
+yarn lint
 if errorlevel 1 (
     echo [WARNING] Линтер обнаружил предупреждения или ошибки.
     set /p CONFIRM_LINT="Продолжить публикацию? (y/N): "
@@ -51,10 +51,10 @@ if errorlevel 1 (
 )
 
 REM Запуск тестов (если есть)
-npm run test >nul 2>&1
+yarn test >nul 2>&1
 if not errorlevel 1 (
     echo [INFO] 🧪 Запуск тестов...
-    npm run test
+    yarn test
     if not errorlevel 1 (
         echo [SUCCESS] Все тесты прошли успешно
     )
