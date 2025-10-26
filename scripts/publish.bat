@@ -110,12 +110,18 @@ echo [SUCCESS] 📦 @moseffect21/appmetrica-push-sdk@%NEW_VERSION%
 REM Очистка временного файла
 del "%PACKAGE_FILE%" 2>nul
 
-REM Создание git тега
+REM Создание git тега и коммита
 echo [INFO] 🏷️  Создание git тега...
 git add package.json
 git commit -m "chore: bump version to %NEW_VERSION%"
 git tag "v%NEW_VERSION%"
 echo [SUCCESS] Git тег v%NEW_VERSION% создан
+
+REM Отправка в GitHub
+echo [INFO] 📤 Отправка изменений в GitHub...
+git push origin main
+git push origin "v%NEW_VERSION%"
+echo [SUCCESS] Изменения отправлены в GitHub
 
 REM Информация для пользователей
 echo.
@@ -127,3 +133,6 @@ echo   yarn add @moseffect21/appmetrica-push-sdk@%NEW_VERSION%
 echo.
 echo [INFO] Проверить пакет:
 echo   npm view @moseffect21/appmetrica-push-sdk
+echo.
+echo [INFO] GitHub Release:
+echo   https://github.com/moseffect21/appmetrica-push-sdk/releases/tag/v%NEW_VERSION%

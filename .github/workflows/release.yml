@@ -1,0 +1,83 @@
+name: Create GitHub Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Get package info
+        id: package
+        run: |
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
+          PACKAGE_NAME=$(node -p "require('./package.json').name")
+          echo "version=$PACKAGE_VERSION" >> $GITHUB_OUTPUT
+          echo "name=$PACKAGE_NAME" >> $GITHUB_OUTPUT
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Получаем последний тег
+          LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+
+          if [ -z "$LAST_TAG" ]; then
+            # Если это первый релиз, показываем все коммиты
+            CHANGELOG=$(git log --pretty=format:"- %s" --no-merges)
+          else
+            # Показываем коммиты с последнего тега
+            CHANGELOG=$(git log --pretty=format:"- %s" --no-merges ${LAST_TAG}..HEAD)
+          fi
+
+          # Сохраняем changelog
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ steps.package.outputs.version }}
+          body: |
+            ## 📦 ${{ steps.package.outputs.name }} v${{ steps.package.outputs.version }}
+
+            ### 🚀 Что нового
+            ${{ steps.changelog.outputs.changelog }}
+
+            ### 📥 Установка
+            ```bash
+            npm install ${{ steps.package.outputs.name }}@${{ steps.package.outputs.version }}
+            # или
+            yarn add ${{ steps.package.outputs.name }}@${{ steps.package.outputs.version }}
+            ```
+
+            ### 📚 Документация
+            - [Интеграционный гайд](./docs/INTEGRATION_GUIDE.md)
+            - [Настройка APNS токена](./docs/IOS_APNS_SETUP.md)
+            - [Руководство для аналитиков](./docs/ANALYTICS_GUIDE.md)
+
+            ### 🔗 Ссылки
+            - [npm package](https://www.npmjs.com/package/${{ steps.package.outputs.name }})
+            - [GitHub repository](https://github.com/moseffect21/appmetrica-push-sdk)
+          draft: false
+          prerelease: false

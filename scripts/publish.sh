@@ -146,12 +146,18 @@ if npm publish --access public; then
     # Очистка временного файла
     rm -f "$PACKAGE_FILE"
     
-    # Создание git тега
+    # Создание git тега и коммита
     log "🏷️  Создание git тега..."
     git add package.json
     git commit -m "chore: bump version to $NEW_VERSION"
     git tag "v$NEW_VERSION"
     success "Git тег v$NEW_VERSION создан"
+    
+    # Отправка в GitHub
+    log "📤 Отправка изменений в GitHub..."
+    git push origin main
+    git push origin "v$NEW_VERSION"
+    success "Изменения отправлены в GitHub"
     
     # Информация для пользователей
     echo
@@ -163,6 +169,9 @@ if npm publish --access public; then
     echo
     log "Проверить пакет:"
     echo "  npm view @moseffect21/appmetrica-push-sdk"
+    echo
+    log "GitHub Release:"
+    echo "  https://github.com/moseffect21/appmetrica-push-sdk/releases/tag/v$NEW_VERSION"
     
 else
     error "❌ Ошибка при публикации пакета"
