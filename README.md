@@ -5,8 +5,8 @@ React Native библиотека для интеграции с Yandex AppMetri
 ## 📚 Документация
 
 - [Интеграционный гайд](./docs/INTEGRATION_GUIDE.md) - подробное руководство по интеграции
+- [Настройка APNS токена для iOS](./docs/IOS_APNS_SETUP.md) - обязательная настройка для iOS
 - [Руководство для аналитиков](./docs/ANALYTICS_GUIDE.md) - настройка push кампаний
-- [Настройка Silent Push](./docs/SILENT_PUSH_SETUP.md) - настройка silent push уведомлений
 
 ## 🚀 Установка
 
@@ -21,21 +21,6 @@ yarn add @moseffect21/appmetrica-push-sdk@git+https://github.com/moseffect21/app
 ## ⚡ Быстрый старт
 
 ### 1. Настройка нативного кода
-
-#### iOS (AppDelegate.swift)
-
-```swift
-import AppMetricaPushSDK
-
-func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
-    AppMetricaPushInitializer.initialize(application: application, withLaunchOptions: launchOptions)
-    return true
-}
-
-func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
-    AppMetricaPushInitializer.registerDeviceToken(deviceToken)
-}
-```
 
 #### Android
 
@@ -76,11 +61,21 @@ func application(_ application: UIApplication, didRegisterForRemoteNotifications
 ### 2. Использование в React Native
 
 ```typescript
+import { Platform } from "react-native";
+import { getAPNSToken, getMessaging } from "@react-native-firebase/messaging";
 import { AppMetricaPush } from "@moseffect21/appmetrica-push-sdk";
 
-// Инициализация (обязательно для Android)
+// Получение APNS токена для iOS
+let apnsToken = "";
+if (Platform.OS === "ios") {
+  const messaging = getMessaging();
+  apnsToken = (await getAPNSToken(messaging)) ?? "";
+}
+
+// Инициализация с APNS токеном для iOS
 await AppMetricaPush.initialize({
   debugMode: __DEV__,
+  apnsToken: Platform.OS === "ios" ? apnsToken : undefined,
 });
 
 // Проверка уведомления
@@ -115,6 +110,12 @@ const userData = await AppMetricaPush.getUserData(notification);
 - `useAppMetricaPush()` - хук для работы с SDK
 
 ## 🔧 Зависимости
+
+### React Native
+
+```bash
+npm install @react-native-firebase/messaging
+```
 
 ### Android (android/app/build.gradle)
 

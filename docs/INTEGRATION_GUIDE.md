@@ -14,6 +14,12 @@ yarn add @moseffect21/appmetrica-push-sdk@git+https://github.com/moseffect21/app
 
 ### 2. Настройка зависимостей
 
+#### React Native
+
+```bash
+npm install @react-native-firebase/messaging
+```
+
 #### Android
 
 **Зависимости AppMetrica Push SDK устанавливаются автоматически через библиотеку.**
@@ -59,15 +65,23 @@ func application(_ application: UIApplication, didFinishLaunchingWithOptions lau
 
 ```typescript
 import { Platform } from "react-native";
+import { getAPNSToken, getMessaging } from "@react-native-firebase/messaging";
 import {
   AppMetricaPush,
   registerDeviceToken,
 } from "@moseffect21/appmetrica-push-sdk";
 
+// Получение APNS токена для iOS
+let apnsToken = "";
+if (Platform.OS === "ios") {
+  const messaging = getMessaging();
+  apnsToken = (await getAPNSToken(messaging)) ?? "";
+}
+
 // Инициализация с автоматической регистрацией APNs токена для iOS
 await AppMetricaPush.initialize({
   debugMode: __DEV__,
-  apnsToken: Platform.OS === "ios" ? await getAPNsToken() : undefined, // Только для iOS
+  apnsToken: Platform.OS === "ios" ? apnsToken : undefined, // Только для iOS
   appGroup: undefined, // Только для iOS
 });
 
@@ -96,8 +110,22 @@ const userData = await AppMetricaPush.getUserData(notification);
 ### Параметры конфигурации
 
 - **`debugMode`**: Включает отладочные сообщения (по умолчанию `false`)
-- **`apnsToken`**: APNs device token для автоматической регистрации на iOS (опционально)
+- **`apnsToken`**: APNs device token для автоматической регистрации на iOS (обязательно для iOS)
 - **`appGroup`**: App Group для расширений iOS (опционально)
+
+### ⚠️ Важно для iOS
+
+Для iOS **обязательно** нужно передавать APNS токен, полученный через Firebase:
+
+```typescript
+import { getAPNSToken, getMessaging } from "@react-native-firebase/messaging";
+
+let apnsToken = "";
+if (Platform.OS === "ios") {
+  const messaging = getMessaging();
+  apnsToken = (await getAPNSToken(messaging)) ?? "";
+}
+```
 
 ## 🔧 Дополнительные настройки
 

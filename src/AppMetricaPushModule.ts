@@ -48,6 +48,7 @@ class AppMetricaPush {
         }
 
         // Автоматически регистрируем APNs device token для iOS если предоставлен
+        // APNs токен должен быть получен через messaging.getAPNSToken()
         if (config.apnsToken && Platform.OS === "ios") {
           await this.registerDeviceToken(config.apnsToken);
 
@@ -151,7 +152,10 @@ class AppMetricaPush {
         throw new Error("AppMetricaPushModule is not available");
       }
 
-      return await AppMetricaPushModule.registerDeviceToken(deviceToken);
+      const result = await AppMetricaPushModule.registerDeviceToken(
+        deviceToken
+      );
+      return result;
     } catch (error) {
       console.error("Failed to register device token:", error);
       return false;

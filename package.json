@@ -29,10 +29,6 @@
     "url": "https://github.com/moseffect21/appmetrica-push-sdk/issues"
   },
   "homepage": "https://github.com/moseffect21/appmetrica-push-sdk#readme",
-  "peerDependencies": {
-    "react": ">=16.8.0",
-    "react-native": ">=0.60.0"
-  },
   "devDependencies": {
     "@types/react": "^18.0.0",
     "@types/react-native": "^0.72.0",
@@ -45,6 +41,11 @@
   },
   "dependencies": {
     "react-native-permissions": "^3.0.0"
+  },
+  "peerDependencies": {
+    "react": ">=16.8.0",
+    "react-native": ">=0.60.0",
+    "@react-native-firebase/messaging": ">=18.0.0"
   },
   "react-native": {
     "android": {

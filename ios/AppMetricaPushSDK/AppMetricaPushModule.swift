@@ -3,6 +3,26 @@ import React
 import AppMetricaPush
 import UserNotifications
 
+// MARK: - Data Extension for Hex String
+extension Data {
+    init?(hexString: String) {
+        let len = hexString.count / 2
+        var data = Data(capacity: len)
+        var i = hexString.startIndex
+        for _ in 0..<len {
+            let j = hexString.index(i, offsetBy: 2)
+            let bytes = hexString[i..<j]
+            if var num = UInt8(bytes, radix: 16) {
+                data.append(&num, count: 1)
+            } else {
+                return nil
+            }
+            i = j
+        }
+        self = data
+    }
+}
+
 
 @objc(AppMetricaPushModule)
 class AppMetricaPushModule: NSObject, RCTBridgeModule {
@@ -141,13 +161,32 @@ class AppMetricaPushModule: NSObject, RCTBridgeModule {
         DispatchQueue.main.async {
             do {
                 // Преобразуем строку в Data
-                // Для обычных строк используем UTF-8 кодировку
-                guard let tokenData = deviceToken.data(using: .utf8) else {
-                    rejecter("INVALID_TOKEN", "Failed to convert device token string to Data", nil)
+                // Пробуем сначала как hex строку, потом как обычную строку
+                var tokenData: Data?
+                
+                // Пробуем как hex строку (APNs токен)
+                if deviceToken.count % 2 == 0 && deviceToken.allSatisfy({ $0.isHexDigit }) {
+                    tokenData = Data(hexString: deviceToken)
+                }
+                
+                // Если не получилось как hex, пробуем как обычную строку
+                if tokenData == nil {
+                    tokenData = deviceToken.data(using: .utf8)
+                }
+                
+                guard let finalTokenData = tokenData else {
+                    rejecter("INVALID_TOKEN", "Failed to convert device token to Data", nil)
                     return
                 }
                 
-                AppMetricaPush.setDeviceTokenFrom(tokenData)
+                // Определяем окружение для APNs
+                #if DEBUG
+                let pushEnvironment = AppMetricaPushEnvironment.development
+                #else
+                let pushEnvironment = AppMetricaPushEnvironment.production
+                #endif
+                
+                AppMetricaPush.setDeviceTokenFrom(finalTokenData, pushEnvironment: pushEnvironment)
                 
                 resolver(true)
             } catch {

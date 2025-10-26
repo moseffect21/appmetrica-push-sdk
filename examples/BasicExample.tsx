@@ -8,6 +8,7 @@ import {
   ScrollView,
   Platform,
 } from "react-native";
+import { getAPNSToken, getMessaging } from "@react-native-firebase/messaging";
 import { AppMetricaPush } from "../src";
 
 /**
@@ -44,8 +45,19 @@ export const BasicExample: React.FC = () => {
   const handleInitialize = async () => {
     try {
       addLog("Initializing AppMetrica Push SDK...");
+
+      // Получение APNS токена для iOS
+      let apnsToken = "";
+      if (Platform.OS === "ios") {
+        addLog("Getting APNS token for iOS...");
+        const messaging = getMessaging();
+        apnsToken = (await getAPNSToken(messaging)) ?? "";
+        addLog(`APNS token: ${apnsToken ? "✅ Received" : "❌ Failed to get"}`);
+      }
+
       const result = await AppMetricaPush.initialize({
         debugMode: __DEV__,
+        apnsToken: Platform.OS === "ios" ? apnsToken : undefined,
       });
 
       if (result.success) {
