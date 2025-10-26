@@ -92,6 +92,27 @@ export const getCurrentConfig = () => {
 };
 
 /**
+ * Регистрация device token для push-уведомлений
+ */
+export const registerDeviceToken = async (
+  deviceToken: string
+): Promise<boolean> => {
+  const instance = AppMetricaPush.getInstance();
+
+  if (!instance.isSDKInitialized()) {
+    console.error("AppMetrica Push SDK is not initialized");
+    return false;
+  }
+
+  try {
+    return await instance.registerDeviceToken(deviceToken);
+  } catch (error) {
+    console.error("Failed to register device token:", error);
+    return false;
+  }
+};
+
+/**
  * Сброс состояния SDK (для тестирования)
  */
 export const resetSDK = (): void => {

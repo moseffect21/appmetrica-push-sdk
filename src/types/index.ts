@@ -4,6 +4,10 @@
 export interface PushConfig {
   /** Режим отладки */
   debugMode?: boolean;
+  /** APNs device token для iOS (опционально) */
+  apnsToken?: string;
+  /** App Group для расширений (опционально) */
+  appGroup?: string;
 }
 
 /**

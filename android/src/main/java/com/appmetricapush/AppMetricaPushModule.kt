@@ -143,6 +143,24 @@ class AppMetricaPushModule(reactContext: ReactApplicationContext) : ReactContext
         }
 
     /**
+     * Регистрация device token (заглушка для iOS совместимости)
+     * В Android device token регистрируется автоматически через Firebase
+     */
+    @ReactMethod
+    fun registerDeviceToken(deviceToken: String, promise: Promise) {
+        try {
+            // В Android device token регистрируется автоматически через Firebase
+            // Этот метод добавлен для совместимости с iOS API
+            Log.d(TAG, "Device token registration not needed on Android (handled by Firebase)")
+            promise.resolve(true)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to register device token", e)
+            promise.reject("REGISTRATION_ERROR", e.message)
+        }
+    }
+
+
+    /**
      * Получение версии AppMetrica Push SDK
      */
     private fun getAppMetricaPushVersion(): String {

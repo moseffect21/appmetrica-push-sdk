@@ -47,6 +47,15 @@ class AppMetricaPush {
           console.log("AppMetrica Push SDK initialized successfully");
         }
 
+        // Автоматически регистрируем APNs device token для iOS если предоставлен
+        if (config.apnsToken && Platform.OS === "ios") {
+          await this.registerDeviceToken(config.apnsToken);
+
+          if (config.debugMode) {
+            console.log("APNs device token registered for iOS");
+          }
+        }
+
         return { success: true };
       } else {
         return {
@@ -130,6 +139,22 @@ class AppMetricaPush {
     } catch (error) {
       console.error("Failed to get user data:", error);
       return null;
+    }
+  }
+
+  /**
+   * Регистрация device token для push-уведомлений
+   */
+  async registerDeviceToken(deviceToken: string): Promise<boolean> {
+    try {
+      if (!AppMetricaPushModule) {
+        throw new Error("AppMetricaPushModule is not available");
+      }
+
+      return await AppMetricaPushModule.registerDeviceToken(deviceToken);
+    } catch (error) {
+      console.error("Failed to register device token:", error);
+      return false;
     }
   }
 

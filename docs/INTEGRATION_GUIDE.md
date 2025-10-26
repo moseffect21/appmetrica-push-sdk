@@ -42,18 +42,12 @@ cd ios && pod install
 ### iOS (AppDelegate.swift)
 
 ```swift
-import AppMetricaPushSDK
-
+// AppDelegate.swift - минимальная настройка
 func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
-    // Инициализация AppMetrica Push SDK
-    AppMetricaPushInitializer.initialize(application: application, withLaunchOptions: launchOptions)
+    // AppMetrica Push SDK инициализируется через TypeScript
+    // после инициализации основной AppMetrica
 
     return true
-}
-
-func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
-    // Регистрация device token
-    AppMetricaPushInitializer.registerDeviceToken(deviceToken)
 }
 ```
 
@@ -64,12 +58,22 @@ func application(_ application: UIApplication, didRegisterForRemoteNotifications
 ## 💻 Использование в React Native
 
 ```typescript
-import { AppMetricaPush } from "@moseffect21/appmetrica-push-sdk";
+import { Platform } from "react-native";
+import {
+  AppMetricaPush,
+  registerDeviceToken,
+} from "@moseffect21/appmetrica-push-sdk";
 
-// Инициализация (обязательно для Android, опционально для iOS)
+// Инициализация с автоматической регистрацией APNs токена для iOS
 await AppMetricaPush.initialize({
   debugMode: __DEV__,
+  apnsToken: Platform.OS === "ios" ? await getAPNsToken() : undefined, // Только для iOS
+  appGroup: undefined, // Только для iOS
 });
+
+// Дополнительная регистрация device token (если нужна)
+const deviceToken = await getDeviceToken(); // Ваш метод получения токена
+await registerDeviceToken(deviceToken);
 
 // Проверка уведомления
 const isFromAppMetrica = await AppMetricaPush.isNotificationFromAppMetrica(
@@ -85,8 +89,15 @@ const userData = await AppMetricaPush.getUserData(notification);
 
 ### Различия между платформами
 
-- **iOS**: Инициализация происходит в `AppDelegate.swift` через `AppMetricaPushInitializer`
+- **iOS**: Инициализация происходит через React Native модуль при вызове `AppMetricaPush.initialize()`
 - **Android**: Инициализация происходит через React Native модуль при вызове `AppMetricaPush.initialize()`
+- **Обе платформы**: Device token передается через TypeScript метод `registerDeviceToken()`
+
+### Параметры конфигурации
+
+- **`debugMode`**: Включает отладочные сообщения (по умолчанию `false`)
+- **`apnsToken`**: APNs device token для автоматической регистрации на iOS (опционально)
+- **`appGroup`**: App Group для расширений iOS (опционально)
 
 ## 🔧 Дополнительные настройки
 

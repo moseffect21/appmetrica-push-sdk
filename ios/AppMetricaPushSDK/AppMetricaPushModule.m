@@ -17,4 +17,9 @@ RCT_EXTERN_METHOD(getUserData:(NSDictionary *)notification
                   resolver:(RCTPromiseResolveBlock)resolver
                   rejecter:(RCTPromiseRejectBlock)rejecter)
 
+RCT_EXTERN_METHOD(registerDeviceToken:(NSString *)deviceToken
+                  resolver:(RCTPromiseResolveBlock)resolver
+                  rejecter:(RCTPromiseRejectBlock)rejecter)
+
+
 @end
