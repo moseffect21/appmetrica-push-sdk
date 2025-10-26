@@ -9,7 +9,11 @@
     "test": "jest",
     "lint": "eslint src --ext .ts,.tsx",
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run lint",
+    "publish:patch": "./scripts/publish.sh patch",
+    "publish:minor": "./scripts/publish.sh minor",
+    "publish:major": "./scripts/publish.sh major",
+    "publish:check": "npm pack --dry-run"
   },
   "keywords": [
     "react-native",
@@ -63,6 +67,7 @@
     "android",
     "ios",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "docs"
   ]
 }

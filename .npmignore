@@ -1,0 +1,44 @@
+# Build outputs (not needed for source distribution)
+dist/
+__tests__/
+examples/
+
+# Development files
+*.log
+.DS_Store
+.vscode/
+.idea/
+
+# Dependencies
+node_modules/
+
+# Build artifacts
+*.tgz
+*.tar.gz
+
+# Git
+.git/
+.gitignore
+
+# CI/CD
+.github/
+
+# Documentation source (only include compiled docs)
+docs/*.md
+!docs/INTEGRATION_GUIDE.md
+!docs/ANALYTICS_GUIDE.md
+!docs/IOS_APNS_SETUP.md
+
+# Publish guide (internal documentation)
+PUBLISH_GUIDE.md
+
+# Config files
+tsconfig.json
+.eslintrc*
+jest.config.*
+babel.config.*
+metro.config.*
+
+# Package files
+package-lock.json
+yarn.lock
