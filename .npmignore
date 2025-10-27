@@ -42,3 +42,6 @@ metro.config.*
 # Package files
 package-lock.json
 yarn.lock
+
+# Include podspec files for React Native iOS
+!*.podspec
